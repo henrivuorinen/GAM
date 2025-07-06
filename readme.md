@@ -22,10 +22,11 @@ This phase aims to identify natural clusters within the data by simulating a gra
 
 *   **Data Points:** Let $X = \{x_1, x_2, \ldots, x_N\}$ be the set of $N$ input data points, where each $x_i \in \mathbb{R}^D$ (D-dimensional feature vector).
 *   **Influence/Gravitational Force:** The "force" or "influence" exerted by point $x_j$ on $x_i$ is modeled using a Gaussian (Radial Basis Function) kernel, which ensures highly localized interaction:
-    $$ I(x_i, x_j) = \exp(-\gamma ||x_i - x_j||^2) $$
+    $I(x_i, x_j) = \exp(-\gamma ||x_i - x_j||^2)$
     where $||x_i - x_j||^2$ is the squared Euclidean distance between $x_i$ and $x_j$, and $\gamma > 0$ is the **bandwidth parameter** (`gamma_clustering` in code), controlling the spread of influence. A larger $\gamma$ means a more localized force.
 *   **Iterative Movement:** Points iteratively move towards regions of higher density. For each point $x_i$, its new position is calculated as the weighted average of all other points' current positions, where weights are determined by the gravitational influence:
-    $$ x_i^{\text{new}} = \frac{\sum_{j\neq i} I(x_i^{\text{current}}, x_j^{\text{current}}) \cdot x_j^{\text{current}}}{\sum_{j\neq i} I(x_i^{\text{current}}, x_j^{\text{current}})} $$
+    $x_i^{\text{new}} = \frac{\sum_{j\neq i} I(x_i^{\text{current}}, x_j^{\text{current}}) \cdot x_j^{\text{current}}}{\sum_{j\neq i} I(x_i^{\text{current}}, x_j^{\text{current}})}$
+    
     This iterative process (`n_iterations_clustering` in code) allows points to converge towards modes of density in the feature space.
 *   **Cluster Identification:** After $k$ iterations, points that have converged to sufficiently close locations are grouped into clusters using Agglomerative Clustering (`clustering_distance_threshold` in code).
 
@@ -36,9 +37,9 @@ Once clusters $C_1, C_2, \ldots, C_M$ are identified, a specialized regression o
 *   **Local Model Training:** For each cluster $C_m$, a subset of the original data $D_m = \{(x_i, y_i) \mid x_i \in C_m\}$ is used to train a local model $f_m$.
     *   Each $f_m$ is a polynomial regression/classification model. This is achieved by first transforming the input features $x$ using `PolynomialFeatures` (`local_model_degree` in code) to generate higher-order and interaction terms, resulting in $\phi(x)$.
     *   For regression tasks, `Ridge` regularization is applied to these polynomial regressions. The local model $f_m(x)$ then takes the form:
-        $$ f_m(x) = w_m^{T}\phi(x) $$
+        $f_m(x) = w_m^{T}\phi(x)$
         The coefficients $w_m$ are learned by minimizing the Ridge objective function:
-        $$ \min_{w_m} ||Y_m - \Phi_m w_m ||^2 + \lambda||w_m||^2 $$
+        $\min_{w_m} ||Y_m - \Phi_m w_m ||^2 + \lambda||w_m||^2$
         Here, $Y_m$ is the vector of target values for data points in cluster $C_m$, $\Phi_m$ is the design matrix where each row corresponds to the polynomial features $\phi(x_i)$ for $x_i \in C_m$, and $\lambda$ is the **regularization strength** ($\lambda \ge 0$), a hyperparameter that controls the balance between fitting the training data well and keeping the model weights small.
     *   For classification tasks, `LogisticRegression` is used with polynomial features.
 
@@ -48,12 +49,13 @@ For a new, unseen data point $x_{\text{new}}$, the final prediction is a weighte
 
 *   **Cluster Centers:** Each cluster $C_m$ is represented by a center $c_m$, typically the mean of the original data points within that cluster.
 *   **Blending Weights:** The contribution of each local model $f_m$ to the final prediction is determined by a blending weight $B_m(x_{\text{new}})$, which measures the proximity of $x_{\text{new}}$ to the cluster center. This also uses a Gaussian kernel:
-    $$ B_m(x_{\text{new}}) = \exp(-\alpha||x_{\text{new}} - c_m||^2) $$
+    $B_m(x_{\text{new}}) = \exp(-\alpha||x_{\text{new}} - c_m||^2)$
     where $\alpha > 0$ is the **blending bandwidth parameter** (`blending_alpha` in code).
 *   **Normalized Blending Weights:** These weights are normalized across all clusters to sum to 1:
-    $$ \bar{B}_m(x_{\text{new}}) = \frac{B_m(x_{\text{new}})}{\sum_{k=1}^{M} B_k(x_{\text{new}})} $$
+
+    $ \bar{B}_m (x_{\text{new}}) = \frac{B_m(x_{\text{new}})}{\sum_{k=1}^{M} B_k(x_{\text{new}})}$
 *   **Final Prediction:** The overall prediction $\hat{y}(x_{\text{new}})$ is the blended sum:
-    $$ \hat{y}(x_{\text{new}}) = \sum_{m=1}^M \bar{B}_m(x_{\text{new}}) \cdot f_m(x_{\text{new}}) $$
+    $ \hat{y}(x_{\text{new}}) = \sum_{m=1}^M \bar{B}_m(x_{\text{new}}) \cdot f_m(x_{\text{new}})$
     For classification, $f_m(x_{\text{new}})$ provides class probabilities, and the sum $\hat{y}(x_{\text{new}})$ results in a final probability distribution. This mechanism ensures a continuous and smooth "bending" prediction surface that adaptively responds to the local data structure.
 
 For more indepth explanation of the math please visit `Gravity_Adaptive_Model_GAM.pdf` document in the project root.
