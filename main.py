@@ -1,8 +1,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.cluster import AgglomerativeClustering
-from sklearn.metrics import mean_squared_error, accuracy_score, classification_report
-from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error, accuracy_score, classification_report, make_scorer, f1_score
+from sklearn.model_selection import train_test_split, GridSearchCV, KFold
 
 from data_utils import (
     generate_regression_data,
@@ -38,6 +38,8 @@ parser.add_argument('--local_model_degree', type=int, default=2,
                     help='Polynomial degree for local models (Phase 2).')
 parser.add_argument('--clustering_distance_threshold', type=float, default=0.5,
                     help='Distance threshold for Agglomerative Clustering.')
+parser.add_argument('--run_grid_search', action='store_true',
+                    help='If set, performs GridSearchCV for hyperparameter optimization.')
 
 args = parser.parse_args()
 
@@ -79,14 +81,61 @@ def load_data(config):
         raise ValueError(f"Unsupported data_source '{data_source}' for task_type '{task_type}'.")
 
 print(f"Loading data from '{EXPERIMENT_CONFIG['data_source']}' for '{EXPERIMENT_CONFIG['task_type']}' task...")
-X_train, X_test, y_train, y_test = load_data(EXPERIMENT_CONFIG)
+X_train_full, X_test, y_train_full, y_test = load_data(EXPERIMENT_CONFIG)
+
+# For GridSearchCV, train on X_train_full and y_train_full
+# For regular runs, these are the X_train/y_train
+X_train, y_train = X_train_full, y_train_full
 
 # --- Model Initialization & Training ---
-print(f"Running Gravity Adaptive Model...")
-model = GravityAdaptiveModel(
-    task_type=EXPERIMENT_CONFIG['task_type'],
-    **EXPERIMENT_CONFIG['hyperparams'] # Unpack hyperparameters directly
-)
+if args.run_grid_search:
+    print("\n--- Running GridSearchCV for Hyperparameter Optimization ---")
+    # Define the parameter grid to search
+    param_grid = {
+        'gamma_clustering': [0.5, 0.8, 1.0, 2.0],
+        'n_iterations_clustering': [5, 10],
+        'blending_alpha': [0.5, 1.0, 2.0],
+        'local_model_degree': [1, 2, 3], # Max polynomial degree
+        'clustering_distance_threshold': [0.1, 0.3, 0.5, 0.8]
+    }
+
+    # Initialize the base model with task_type
+    base_model = GravityAdaptiveModel(task_type=EXPERIMENT_CONFIG['task_type'])
+
+    # Define scoring based on task type
+    if EXPERIMENT_CONFIG['task_type'] == 'regression':
+        scorer = 'neg_mean_squared_error'
+    elif EXPERIMENT_CONFIG['task_type'] == 'classification':
+        scorer = make_scorer(f1_score, average='weighted')
+    # KFold for cross-validation
+    cv_strategy = KFold(n_splits=5, shuffle=True, random_state=RANDOM_SEED)
+
+    grid_search = GridSearchCV(
+        estimator=base_model,
+        param_grid=param_grid,
+        cv=cv_strategy,
+        scoring=scorer,
+        verbose=2, # Higher verbose for more output during search
+        n_jobs=-1 # Use all available CPU cores
+    )
+
+    grid_search.fit(X_train_full, y_train_full) # Fit GridSearchCV on the full training data
+
+    print("\nBest parameters found:", grid_search.best_params_)
+    if EXPERIMENT_CONFIG['task_type'] == 'regression':
+        print("Best RMSE:", np.sqrt(-grid_search.best_score_))
+    else:
+        print("Best F1-score (weighted):", grid_search.best_score_)
+
+    model = grid_search.best_estimator_ # Use the best model found by GridSearchCV
+
+else: # run without GridSearchCV
+    print(f"Running Gravity Adaptive Model...")
+    model = GravityAdaptiveModel(
+        task_type=EXPERIMENT_CONFIG['task_type'],
+        **EXPERIMENT_CONFIG['hyperparams']
+    )
+    model.fit(X_train, y_train)
 
 # Fit the model ONLY on the training data
 model.fit(X_train, y_train)
