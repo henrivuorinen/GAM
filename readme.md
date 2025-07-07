@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-The **Gravity Adaptive Model (GAM)** is an innovative machine learning approach designed to address the limitations of traditional linear models by creating a highly flexible, non-linear prediction surface. It achieves this by combining a novel physics-inspired clustering method with local, adaptively complex regression/classification models that are smoothly blended across the feature space.
+The **Gravity Adaptive Model (GAM)** is a new machine learning approach designed to address the limitations of traditional linear models by creating a flexible, non-linear prediction surface. It achieves this by combining a novel physics-inspired clustering method with local, adaptively complex regression/classification models that are smoothly blended across the feature space.
 
 Traditional linear models often struggle with non-linear or complex data, leading to underfitting. GAM proposes to overcome this by:
 
