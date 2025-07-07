@@ -150,4 +150,13 @@ weighted avg       0.76      0.76      0.76       179
 ```
 This works as a proof of concept that the model works at some level. By tuning the hyperparameters it is possible to get much better results.
 
+### Running GridSearchCV for hyperparameter optimization (for any dataset):
+Execute the model to use the grid_search
+```bash
+python main.py --data_source [source] --run_grid_search
+```
+
+This will perform a search over the defined hyperparameter grid and print the best parameters found along with their cross-validation score.
+
+
 
