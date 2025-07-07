@@ -4,6 +4,7 @@ from sklearn.linear_model import Ridge, LogisticRegression
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.pipeline import make_pipeline
 from sklearn.metrics import mean_squared_error, accuracy_score
+from sklearn.base import BaseEstimator, ClassifierMixin, RegressorMixin
 from gravity_clustering import gravity_clustering
 
 # Global seed
@@ -39,10 +40,10 @@ class DummyMajorityClassPredictor: # For classification
 
 
 # --- GravityAdaptiveModel Class ---
-class GravityAdaptiveModel:
-    def __init__(self, gamma_clustering, n_iterations_clustering,
-                 blending_alpha, local_model_degree=1,
-                 clustering_distance_threshold=0.2,
+class GravityAdaptiveModel(BaseEstimator, ClassifierMixin, RegressorMixin):
+    def __init__(self, gamma_clustering=0.8, n_iterations_clustering=5,
+                 blending_alpha=1.0, local_model_degree=2,
+                 clustering_distance_threshold=0.5,
                  task_type='regression'):
 
         self.gamma_clustering = gamma_clustering
@@ -55,7 +56,7 @@ class GravityAdaptiveModel:
         self.cluster_centers = None
         self.local_models = []
         self.cluster_data_indices = []
-        self.unique_classes = None # To store unique classes for classification
+        self.unique_classes = None
 
     def fit(self, X, y):
         # Phase 1: Gravity-based clustering
@@ -201,3 +202,34 @@ class GravityAdaptiveModel:
         elif self.task_type == 'classification':
             # Return predicted class labels
             return np.argmax(predictions_proba, axis=1)
+
+    def _more_tags(self):
+        return {
+            'multioutput': False,
+            'poor_score': False,
+            'requires_y': True,
+            'allow_nan': False,
+            'binary_only': self.task_type == 'classification', # Only if truly binary classifier
+            'requires_positive_X': False,
+            'X_types': ['numeric'],
+            'multioutput_only': False,
+            'no_validation': False,
+            'estimator_type': 'classifier' if self.task_type == 'classification' else 'regressor'
+        }
+
+    def get_params(self, deep=True):
+        # Return a dictionary of all hyperparameters
+        return {
+            'gamma_clustering': self.gamma_clustering,
+            'n_iterations_clustering': self.n_iterations_clustering,
+            'blending_alpha': self.blending_alpha,
+            'local_model_degree': self.local_model_degree,
+            'clustering_distance_threshold': self.clustering_distance_threshold,
+            'task_type': self.task_type,
+        }
+
+    def set_params(self, **params):
+        # Set hyperparameters from the dictionary
+        for parameter, value in params.items():
+            setattr(self, parameter, value)
+        return self
