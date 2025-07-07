@@ -118,7 +118,7 @@ Original data:
 Clustering:
 ![alt-text](Figure_1.png)
 
-By tweaking the hyperparameters and for example adjusting the 
+By tweaking the hyperparameters and for example adjusting the `clustering_distance_threshold` and `blending_alpha` it is possible to get much better scores. This is visible when running the model with GridSearch (shown later). 
 
 
 There is a titanic dataset downloaded from Kaggle for testing purposes and for the proof of concept to show that it is possible to use the classification with this model. To run it 
