@@ -156,7 +156,34 @@ Execute the model to use the grid_search
 python main.py --data_source [source] --run_grid_search
 ```
 
-This will perform a search over the defined hyperparameter grid and print the best parameters found along with their cross-validation score.
+This will perform a search over the defined hyperparameter grid and print the best parameters found along with their cross-validation score. For example the non_linear example will get improved into this result:
+```
+python main.py --run_grid_search --data_source blobs_non_linear
+.
+.
+.
+Best parameters found: {'blending_alpha': 2.0, 'clustering_distance_threshold': 0.1, 'gamma_clustering': 0.5, 'local_model_degree': 2, 'n_iterations_clustering': 5}
+Best F1-score (weighted): 0.968719199607237
+Phase 1: Running gravity clustering for 320 points...
+Phase 1 complete. Found 2 clusters.
+Phase 2: Training local models...
+Phase 2 complete. All local models trained.
+
+--- Evaluation for blobs_non_linear (classification) ---
+Accuracy on training data: 0.9688
+Accuracy on test data: 0.9625
+
+Classification Report on Test Data:
+              precision    recall  f1-score   support
+
+           0       0.95      0.97      0.96        40
+           1       0.97      0.95      0.96        40
+
+    accuracy                           0.96        80
+   macro avg       0.96      0.96      0.96        80
+weighted avg       0.96      0.96      0.96        80
+
+```
 
 
 
