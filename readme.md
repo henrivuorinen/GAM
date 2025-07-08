@@ -51,11 +51,8 @@ For a new, unseen data point $x_{\text{new}}$, the final prediction is a weighte
 *   **Blending Weights:** The contribution of each local model $f_m$ to the final prediction is determined by a blending weight $B_m(x_{\text{new}})$, which measures the proximity of $x_{\text{new}}$ to the cluster center. This also uses a Gaussian kernel:
     $B_m(x_{\text{new}}) = \exp(-\alpha||x_{\text{new}} - c_m||^2)$
     where $\alpha > 0$ is the **blending bandwidth parameter** (`blending_alpha` in code).
-*   **Normalized Blending Weights:** These weights are normalized across all clusters to sum to 1:
-
-    $ \bar{B}_m (x_{\text{new}}) = \frac{B_m(x_{\text{new}})}{\sum_{k=1}^{M} B_k(x_{\text{new}})}$
-*   **Final Prediction:** The overall prediction $\hat{y}(x_{\text{new}})$ is the blended sum:
-    $ \hat{y}(x_{\text{new}}) = \sum_{m=1}^M \bar{B}_m(x_{\text{new}}) \cdot f_m(x_{\text{new}})$
+*   **Normalized Blending Weights:** These weights are normalized across all clusters to sum to 1. For further explanation visit the linked pdf document.
+*   **Final Prediction:** The overall prediction $\hat{y}(x_{\text{new}})$ is the blended sum. For further information please visit the linked document.
     For classification, $f_m(x_{\text{new}})$ provides class probabilities, and the sum $\hat{y}(x_{\text{new}})$ results in a final probability distribution. This mechanism ensures a continuous and smooth "bending" prediction surface that adaptively responds to the local data structure.
 
 For more indepth explanation of the math please visit `Gravity_Adaptive_Model_GAM.pdf` document in the project root.
